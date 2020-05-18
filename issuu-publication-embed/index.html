@@ -1,0 +1,109 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"/>
+    <title>Issuu Publication extension</title>
+    <link rel="stylesheet" type="text/css"
+          href="https://unpkg.com/contentful-ui-extensions-sdk@3/dist/cf-extension.css">
+    <style>
+        .embed-container {
+             position: relative;
+             padding-bottom: 56.25%;
+             height: 0;
+             overflow: hidden;
+             max-width: 100%;
+         }
+
+        .embed-container iframe {
+             position: absolute;
+             top: 0;
+             left: 0;
+             width: 100%;
+             height: 100%;
+        }
+    </style>
+
+    <script src="https://unpkg.com/contentful-ui-extensions-sdk@3"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/zepto/1.1.6/zepto.js"></script>
+</head>
+<body>
+
+<form>
+    <div class=cf-form-field>
+        <label for=username>username:</label>
+        <input class=cf-form-input type=text id=username size=40 maxlength=100 placeholder="issuu username"/>
+    </div>
+
+    <div class=cf-form-field>
+        <label for=publication-id>publication id</label>
+        <input class=cf-form-input type=text id=publication-id size=40 maxlength=100 placeholder="publication id"/>
+    </div>
+
+    <div class=cf-form-field>
+        <label for=url>url</label>
+        <input class=cf-form-input id=url disabled/>
+    </div>
+</form>
+
+<div class=embed-container>
+    <iframe allowfullscreen
+            allow=fullscreen>
+    </iframe>
+</div>
+<script>
+
+    function getPublicationUrl() {
+        var username = $('#username').val();
+        var publicationId = $('#publication-id').val();
+
+        return publicationUrlFor(username, publicationId);
+    }
+
+    function publicationUrlFor(username, publicationId) {
+        return 'https://e.issuu.com/anonymous-embed.html?u=' + username + '&d=' + publicationId;
+    }
+
+    function updateIframe(url) {
+        $('iframe').attr('src', url);
+    }
+
+    window.contentfulExtension.init(function (api) {
+        var updateEmbed = function () {
+            var url = getPublicationUrl();
+            updateIframe(url);
+
+            if (api.field.getValue() !== url) {
+                api.field.setValue(url);
+            }
+            $('#url').val(url);
+
+            api.window.updateHeight()
+        }
+
+        var regex = /u=(.+)&d=(.+)/;
+        var value = api.field.getValue();
+
+        var match = value.match(regex);
+        if (match) {
+            var username = match[1];
+            var publicationId = match[2];
+
+            $('#username').val(username);
+            $('#publication-id').val(publicationId);
+
+            updateEmbed();
+        }
+
+        $('#username').on('input', function () {
+            updateEmbed();
+        });
+
+        $('#publication-id').on('input', function () {
+            updateEmbed();
+        });
+    })
+</script>
+
+</body>
+</html>
+
